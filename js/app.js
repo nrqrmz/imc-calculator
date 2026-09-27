@@ -1,9 +1,11 @@
 // Arranque de la app y navegación por pestañas con el hash de la URL (#vista?param=valor).
 import { cargar } from './store.js';
 import { crearVistaCaptura } from './views/captura.js';
+import { crearVistaNinos } from './views/ninos.js';
 
 const CREADORES = {
   captura: crearVistaCaptura,
+  ninos: crearVistaNinos,
 };
 const vistas = {};
 
