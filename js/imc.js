@@ -101,6 +101,16 @@ export function tramosEscala(edadDias) {
 
 const redondear = (valor, decimales) => Math.round(valor * 10 ** decimales) / 10 ** decimales;
 
+// Rango de peso "normal" (Z de −2 a +1) para la altura y la edad de la medición.
+export function pesoNormal(nino, medicion) {
+  const lms = obtenerLMS(nino.sexo, diasEntre(nino.fechaNacimiento, medicion.fecha));
+  const metros = medicion.alturaCm / 100;
+  return {
+    minKg: redondear(valorDE(lms, -2) * metros * metros, 1),
+    maxKg: redondear(valorDE(lms, 1) * metros * metros, 1),
+  };
+}
+
 // nino: { fechaNacimiento, sexo }; medicion: { fecha, pesoKg, alturaCm }.
 export function evaluar(nino, medicion) {
   const edadDias = diasEntre(nino.fechaNacimiento, medicion.fecha);
@@ -114,6 +124,7 @@ export function evaluar(nino, medicion) {
     percentil: redondear(percentil(z), 1),
     clasificacion: clasificar(z, edadDias),
     ciclo: cicloEscolar(medicion.fecha),
+    pesoNormal: pesoNormal(nino, medicion),
   };
 }
 

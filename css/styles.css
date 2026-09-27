@@ -200,6 +200,21 @@ button.primario:disabled:hover { background: var(--azul); border-color: var(--az
 .ficha-encabezado { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
 .ficha-encabezado h2 { font-size: 1.75rem; margin: 0; }
 .ficha-encabezado p { margin: 2px 0 0; color: var(--pizarra-suave); }
+.destacados {
+  display: flex; flex-wrap: wrap; gap: 12px 32px; margin: 14px 0 4px; padding: 12px 18px;
+  background-color: var(--hoja);
+  background-image:
+    linear-gradient(var(--cuadricula-tenue) 1px, transparent 1px),
+    linear-gradient(90deg, var(--cuadricula-tenue) 1px, transparent 1px);
+  background-size: 20px 20px;
+  border: 1px solid var(--cuadricula); border-radius: 4px; font-variant-numeric: tabular-nums;
+  color: var(--pizarra-suave); width: fit-content; max-width: 100%;
+}
+.destacados p { margin: 0; }
+.destacados .etiqueta { font-size: 0.8125rem; font-weight: 600; }
+.destacados .valor { font-size: 1.75rem; font-weight: 800; line-height: 1.2; color: var(--pizarra); }
+.destacados .valor span { font-size: 1rem; font-weight: 700; color: var(--pizarra-suave); }
+.destacados .detalle { font-size: 0.8125rem; }
 .editar-nino label { display: block; margin-bottom: 12px; font-weight: 600; font-size: 0.875rem; }
 .editar-nino label input { margin-top: 6px; font-weight: 400; }
 .editar-nino fieldset { border: 0; padding: 0; margin: 0 0 8px; }
