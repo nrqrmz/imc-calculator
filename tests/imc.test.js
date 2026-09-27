@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   calcularIMC, lmsPorDias, lmsPorMeses, obtenerLMS, valorDE, puntajeZ,
-  percentil, clasificar, tramosEscala, evaluar, evaluarSeguro,
+  percentil, clasificar, tramosEscala, evaluar, evaluarSeguro, pesoNormal,
 } from '../js/imc.js';
 
 const cerca = (real, esperado, tolerancia = 1e-6) =>
@@ -116,4 +116,31 @@ test('evaluar arma el resultado completo', () => {
 
 test('evaluarSeguro devuelve null fuera de las tablas', () => {
   assert.equal(evaluarSeguro({ fechaNacimiento: '2025-01-01', sexo: 'M' }, { fecha: '2026-01-01', pesoKg: 10, alturaCm: 75 }), null);
+});
+
+test('pesoNormal convierte los cortes Z −2 y +1 a kilos con la altura de la medición', () => {
+  const nino = { fechaNacimiento: '2016-12-11', sexo: 'M' };
+  const medicion = { fecha: '2026-09-27', pesoKg: 60, alturaCm: 135 };
+  const lms = obtenerLMS('M', 3577);
+  const { minKg, maxKg } = pesoNormal(nino, medicion);
+  assert.equal(minKg, Math.round(valorDE(lms, -2) * 1.35 ** 2 * 10) / 10);
+  assert.equal(maxKg, Math.round(valorDE(lms, 1) * 1.35 ** 2 * 10) / 10);
+  assert.ok(minKg > 24 && minKg < 26, `minKg = ${minKg}`);
+  assert.ok(maxKg > 33 && maxKg < 34, `maxKg = ${maxKg}`); // OMS: IMC 18.3 en +1 DE a los 9a 9m
+});
+
+test('un peso dentro del rango de pesoNormal se clasifica normal y uno fuera no', () => {
+  const nino = { fechaNacimiento: '2019-05-12', sexo: 'F' };
+  const medicion = { fecha: '2026-09-15', alturaCm: 125 };
+  const { minKg, maxKg } = pesoNormal(nino, medicion);
+  assert.equal(evaluar(nino, { ...medicion, pesoKg: minKg + 0.1 }).clasificacion, 'normal');
+  assert.equal(evaluar(nino, { ...medicion, pesoKg: maxKg - 0.1 }).clasificacion, 'normal');
+  assert.equal(evaluar(nino, { ...medicion, pesoKg: minKg - 0.2 }).clasificacion, 'delgadez');
+  assert.equal(evaluar(nino, { ...medicion, pesoKg: maxKg + 0.2 }).clasificacion, 'sobrepeso');
+});
+
+test('evaluar incluye el peso normal', () => {
+  const nino = { fechaNacimiento: '2019-05-12', sexo: 'F' };
+  const medicion = { fecha: '2026-09-15', pesoKg: 29, alturaCm: 125 };
+  assert.deepEqual(evaluar(nino, medicion).pesoNormal, pesoNormal(nino, medicion));
 });

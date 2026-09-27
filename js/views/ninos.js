@@ -35,7 +35,26 @@ const HTML = `
 const clasificacionHTML = (r) =>
   (r ? `<span class="punto" style="--color:${COLORES[r.clasificacion]}"></span>${ETIQUETAS[r.clasificacion]}` : '—');
 
-const encabezadoHTML = (n) => `
+// IMC y peso esperado de la última medición evaluable, destacados bajo el nombre.
+const destacadosHTML = (ultima) => {
+  if (!ultima) return '';
+  const { m, r } = ultima;
+  return `
+    <div class="destacados">
+      <div>
+        <p class="etiqueta">IMC</p>
+        <p class="valor">${r.imc.toFixed(1)}</p>
+        <p class="detalle">${clasificacionHTML(r)}</p>
+      </div>
+      <div>
+        <p class="etiqueta">Peso esperado</p>
+        <p class="valor">${r.pesoNormal.minKg.toFixed(1)} – ${r.pesoNormal.maxKg.toFixed(1)} <span>kg</span></p>
+        <p class="detalle">Para ${m.alturaCm} cm, a los ${formatearEdadCorta(r.edad)} (${formatearFecha(m.fecha)})</p>
+      </div>
+    </div>`;
+};
+
+const encabezadoHTML = (n, ultima) => `
   <div class="ficha-encabezado">
     <div>
       <h2>${escaparHTML(n.nombre)}</h2>
@@ -45,7 +64,8 @@ const encabezadoHTML = (n) => `
       <button type="button" data-editar-nino>Editar datos</button>
       <button type="button" class="peligro" data-eliminar-nino>Eliminar niño</button>
     </div>
-  </div>`;
+  </div>
+  ${destacadosHTML(ultima)}`;
 
 const edicionHTML = (n) => `
   <form class="editar-nino">
@@ -117,7 +137,7 @@ export function crearVistaNinos(contenedor) {
     const filas = medicionesDe(datos, nino.id).map((m) => ({ m, r: evaluarSeguro(nino, m) }));
     const conResultado = filas.filter((f) => f.r).reverse(); // orden cronológico para la gráfica
     ficha.innerHTML = `
-      ${editando ? edicionHTML(nino) : encabezadoHTML(nino)}
+      ${editando ? edicionHTML(nino) : encabezadoHTML(nino, filas.find((f) => f.r))}
       <p class="error-general" role="alert"></p>
       <h3>Puntaje Z en el tiempo</h3>
       <div class="grafica">${conResultado.length ? '<canvas></canvas>' : '<p class="nota">Sin mediciones todavía.</p>'}</div>
