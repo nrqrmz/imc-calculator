@@ -80,6 +80,33 @@ const HTML = `
   <section class="tarjeta resultado" aria-live="polite"></section>
 </div>`;
 
+const conSigno = (texto) => (Number(texto) > 0 ? `+${texto}` : texto.replace('-', '−'));
+// Posición (en %) de un puntaje Z sobre la regla, que va de −4 a +4.
+const posicionZ = (z) => ((Math.max(-4, Math.min(4, z)) + 4) / 8) * 100;
+
+// Regla de madera de −4 a +4 con marcas cada 0.25, franjas de clasificación
+// y la rayita de lápiz en el puntaje Z. Sin tramos ni z, solo la regla vacía.
+function reglaHTML(tramos, z) {
+  const marcas = Array.from({ length: 33 }, (_, i) => {
+    const valor = -4 + i / 4;
+    const tipo = i % 4 === 0 ? 'entera' : i % 2 === 0 ? 'media' : 'cuarto';
+    const numero = tipo === 'entera' ? `<span>${conSigno(String(valor))}</span>` : '';
+    return `<i class="marca ${tipo}" style="left:${posicionZ(valor)}%">${numero}</i>`;
+  }).join('');
+  const franjas = tramos
+    ? `<div class="franjas">${tramos.map((t) => `<span style="flex:${t.hasta - t.desde};background:${COLORES[t.clasificacion]}" title="${ETIQUETAS[t.clasificacion]}"></span>`).join('')}</div>`
+    : '';
+  const lapiz = z == null
+    ? ''
+    : `<b class="lapiz" style="left:${posicionZ(z)}%"><span>${conSigno(z.toFixed(2))}</span></b>`;
+  const descripcion = z == null ? 'Escala del puntaje Z, de −4 a +4' : `Puntaje Z ${conSigno(z.toFixed(2))} en la escala de −4 a +4`;
+  return `
+    <figure class="regla" role="img" aria-label="${descripcion}">
+      <div class="regla-madera"><div class="regla-marcas">${marcas}${lapiz}</div></div>
+      ${franjas}
+    </figure>`;
+}
+
 export function crearVistaCaptura(contenedor) {
   contenedor.innerHTML = HTML;
   const $ = (selector) => contenedor.querySelector(selector);
@@ -122,24 +149,24 @@ export function crearVistaCaptura(contenedor) {
   function renderResultado() {
     const v = validarRegistro(leerRegistro(), hoyISO());
     if (!v.valido) {
-      resultado.innerHTML = '<p class="nota">Completa los datos para ver el resultado.</p>';
+      resultado.innerHTML = `
+        <p class="nota">Completa los datos para ver el resultado.</p>
+        ${reglaHTML(null, null)}`;
       return;
     }
     const r = v.resultado;
-    const posicion = ((Math.max(-4, Math.min(4, r.z)) + 4) / 8) * 100;
+    const z = conSigno(r.z.toFixed(2));
     resultado.innerHTML = `
       <p class="edad">${formatearEdad(r.edad)}</p>
-      <div class="metricas">
-        <div><span>IMC</span><strong>${r.imc.toFixed(1)}</strong></div>
-        <div><span>Puntaje Z</span><strong>${r.z > 0 ? '+' : ''}${r.z.toFixed(2)}</strong></div>
-        <div><span>Percentil</span><strong>${r.percentil.toFixed(1)}</strong></div>
+      <div class="lectura">
+        <p class="imc"><strong>${r.imc.toFixed(1)}</strong> <span>IMC</span></p>
+        <dl>
+          <div><dt>Puntaje Z</dt><dd>${z}</dd></div>
+          <div><dt>Percentil</dt><dd>${r.percentil.toFixed(1)}</dd></div>
+        </dl>
       </div>
       <p class="clasificacion" style="--color:${COLORES[r.clasificacion]}">${ETIQUETAS[r.clasificacion]}</p>
-      <div class="escala">
-        ${tramosEscala(r.edadDias).map((t) => `<span style="flex:${t.hasta - t.desde};background:${COLORES[t.clasificacion]}" title="${ETIQUETAS[t.clasificacion]}"></span>`).join('')}
-        <i class="marcador" style="left:${posicion}%"></i>
-      </div>
-      <div class="escala-numeros">${[-4, -3, -2, -1, 0, 1, 2, 3, 4].map((n) => `<span>${n > 0 ? '+' : ''}${n}</span>`).join('')}</div>
+      ${reglaHTML(tramosEscala(r.edadDias), r.z)}
       ${v.advertencias.map((a) => `<p class="advertencia">⚠ ${escaparHTML(a)}</p>`).join('')}`;
   }
 
