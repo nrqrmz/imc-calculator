@@ -21,7 +21,7 @@ Herramienta interna de una escuela Montessori en México para registrar el peso 
 ## 2. Stack y despliegue
 
 - HTML + CSS + JavaScript vanilla, sin frameworks ni paso de compilación. JS organizado en módulos ES nativos (`<script type="module">`).
-- Gráficas con **Chart.js** cargado desde jsDelivr con versión exacta fijada (la 4.x vigente al implementar, p. ej. `chart.js@4.5.0`).
+- Gráficas con **Chart.js** cargado desde jsDelivr con versión exacta fijada (`chart.js@4.5.1`, `dist/chart.umd.min.js`).
 - Persistencia en `localStorage`.
 - Despliegue en GitHub Pages desde la rama `master`.
 - La app requiere internet (CDN). Para desarrollo local se sirve con un servidor estático (p. ej. `npx serve`), ya que los módulos ES no funcionan con `file://`.
@@ -31,18 +31,25 @@ Herramienta interna de una escuela Montessori en México para registrar el peso 
 ```
 index.html
 css/styles.css
+data-oms/           archivos oficiales de la OMS (fuente de oms-lms.js)
+scripts/generar-oms-lms.mjs   genera js/oms-lms.js
 js/
   app.js            arranque, navegación por pestañas (#captura, #ninos, #estadisticas, #datos)
-  oms-lms.js        coeficientes L, M, S de la OMS por sexo y mes (36–191)
-  imc.js            edad en meses, IMC, puntaje Z, percentil, clasificación
+  oms-lms.js        coeficientes L, M, S de la OMS (generado)
+  fechas.js         parseo/formato de fechas, edad en días y calendario
   ciclo.js          fecha → ciclo escolar
+  imc.js            IMC, puntaje Z, percentil, clasificación
   talleres.js       talleres y sus grados; validación del par taller/grado
-  normalizar.js     normalización de nombres (clave de identidad)
-  store.js          leer/guardar el objeto de datos en localStorage; altas, cambios, bajas
+  normalizar.js     normalización de nombres (clave de identidad), sexo, decimales
+  validacion.js     validación de un registro (niño + medición), compartida por captura y CSV
+  datos.js          operaciones sobre el objeto de datos: altas, cambios, bajas, búsquedas
+  store.js          leer/guardar el objeto de datos en localStorage
   csv.js            parseo e importación de CSV; generación del CSV de exportación
   respaldo.js       exportar/restaurar JSON
-  estadisticas.js   agregaciones por taller/grado/ciclo (funciones puras)
+  estadisticas.js   agregaciones por taller/grado/ciclo
   views/
+    dom.js          utilidades de DOM (descargar, leer archivo, escapar HTML)
+    graficas.js     colores y ayudantes de Chart.js
     captura.js
     ninos.js
     estadisticas.js
@@ -51,7 +58,7 @@ tests/*.test.js     pruebas con `node --test`
 package.json        solo `{"type": "module", "scripts": {"test": "node --test"}}`, sin dependencias
 ```
 
-Regla de separación: todo lo de `js/*.js` excepto `app.js` y `store.js` son funciones puras sin DOM, probables con Node. Las vistas solo leen/escriben a través de `store.js` y usan las funciones puras para calcular.
+Regla de separación: todo lo de `js/*.js` excepto `app.js` son módulos sin DOM, probables con Node (`store.js` con un `localStorage` simulado). Las vistas solo leen/escriben a través de `store.js` y usan las funciones puras para calcular.
 
 ## 4. Modelo de datos
 
@@ -93,7 +100,8 @@ Un solo objeto JSON guardado en `localStorage` bajo una clave (`imc-calculator`)
 - **Identidad del niño:** nombre normalizado + fecha de nacimiento. Normalizar = quitar acentos/diacríticos, pasar a minúsculas, recortar y colapsar espacios. No puede haber dos niños con la misma clave.
 - **Una medición por niño por fecha.** Una nueva medición con la misma fecha reemplaza a la anterior (en captura manual, previa confirmación).
 - **Validaciones de medición:**
-  - Edad en la fecha de medición: de 36 a 191 meses cumplidos (3 a 15 años). Fuera de rango → error.
+  - Edad en la fecha de medición: de 3 a 15 años cumplidos (calendario). Fuera de rango → error.
+  - Nombre no vacío.
   - Fecha de medición no posterior a hoy ni anterior a la fecha de nacimiento.
   - Altura: 70–200 cm. Peso: 8–150 kg. Fuera de rango → error.
   - Par taller/grado válido según la tabla.
@@ -103,14 +111,16 @@ Un solo objeto JSON guardado en `localStorage` bajo una clave (`imc-calculator`)
 
 Referencia oficial usada en México (NOM-031-SSA2, NOM-008-SSA3): OMS.
 
-- **36–60 meses:** Patrones de Crecimiento Infantil OMS 2006, IMC para la edad.
-- **61–191 meses:** Referencia de Crecimiento OMS 2007, IMC para la edad.
+- **Hasta 1826 días de edad (60 meses):** Patrones de Crecimiento Infantil OMS 2006, IMC para la edad, **por día de edad** (igual que el software WHO Anthro).
+- **Más de 1826 días:** Referencia de Crecimiento OMS 2007, IMC para la edad, por mes con **interpolación lineal** de L, M, S entre meses (igual que el software WHO AnthroPlus), con edad en meses = días / 30.4375.
 
-`oms-lms.js` contiene los coeficientes L, M, S por mes y sexo, tomados de las tablas oficiales publicadas por la OMS y convertidos una vez a módulo JS.
+`oms-lms.js` se genera con un script a partir de los archivos oficiales de la OMS, versionados en `data-oms/`:
+- `bmianthro.txt` — repositorio `WorldHealthOrganization/anthro`, `data-raw/growthstandards/`.
+- `bfawho2007.txt` — repositorio `WorldHealthOrganization/anthroplus`, `data-raw/growthstandards/`.
 
 ### Pasos
 
-1. **Edad en meses cumplidos:** diferencia en meses entre nacimiento y medición, restando 1 si el día de la medición es menor que el día de nacimiento.
+1. **Edad:** en días (diferencia de fechas) para el cálculo; en años y meses cumplidos (calendario) para mostrar y para validar el rango de 3 a 15 años.
 2. **IMC** = peso (kg) / (altura (m))², mostrado con 1 decimal.
 3. **Puntaje Z (LMS):** `Z = ((IMC / M)^L − 1) / (L · S)`.
    Ajuste OMS para colas, con `SD(k) = M · (1 + L·S·k)^(1/L)`:
@@ -118,9 +128,9 @@ Referencia oficial usada en México (NOM-031-SSA2, NOM-008-SSA3): OMS.
    - Si Z < −3: `Z = −3 + (IMC − SD(−3)) / (SD(−2) − SD(−3))`
    Mostrado con 2 decimales.
 4. **Percentil:** Φ(Z) × 100 con la función de distribución normal estándar, mostrado con 1 decimal.
-5. **Clasificación:**
+5. **Clasificación** (con el Z ya redondeado a 2 decimales, como hace la OMS):
 
-| Puntaje Z | 36–60 meses | 61–191 meses |
+| Puntaje Z | ≤ 1826 días (≤ 60 meses) | > 1826 días |
 |---|---|---|
 | Z < −3 | Delgadez severa | Delgadez severa |
 | −3 ≤ Z < −2 | Delgadez | Delgadez |
