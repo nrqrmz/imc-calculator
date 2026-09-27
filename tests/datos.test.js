@@ -92,3 +92,12 @@ test('eliminarMedicion', () => {
   eliminarMedicion(datos, medicionesDe(datos, sofia.id)[0].id);
   assert.equal(medicionesDe(datos, sofia.id).length, 1);
 });
+
+test('guardarMedicion rechaza un niño que no existe', () => {
+  const { datos } = datosDePrueba();
+  assert.throws(
+    () => guardarMedicion(datos, { ninoId: 'borrado', fecha: '2026-09-15', pesoKg: 29, alturaCm: 125, taller: 'T2', grado: 5 }),
+    /El niño ya no existe/,
+  );
+  assert.equal(datos.mediciones.filter((m) => m.ninoId === 'borrado').length, 0);
+});

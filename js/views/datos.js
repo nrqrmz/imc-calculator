@@ -1,6 +1,8 @@
 // Vista Datos: importar CSV con vista previa, exportar CSV y respaldo JSON.
 import * as store from '../store.js';
-import { analizarImportacion, aplicarImportacion, generarCSVExportacion, PLANTILLA_CSV, COLUMNAS } from '../csv.js';
+import {
+  analizarImportacion, aplicarImportacion, generarCSVExportacion, decodificarCSV, PLANTILLA_CSV, COLUMNAS,
+} from '../csv.js';
 import { generarRespaldo, leerRespaldo } from '../respaldo.js';
 import { hoyISO } from '../fechas.js';
 import { escaparHTML, descargar } from './dom.js';
@@ -44,6 +46,10 @@ export function crearVistaDatos(contenedor) {
   function renderConteo() {
     const d = store.obtenerDatos();
     $('.conteo').textContent = `${d.ninos.length} niños · ${d.mediciones.length} mediciones`;
+    // Con datos dañados lo que hay en memoria está vacío: no se ofrece descargarlo.
+    for (const boton of contenedor.querySelectorAll('[data-respaldo], [data-exportar-csv]')) {
+      boton.disabled = store.estaBloqueado();
+    }
   }
 
   function renderVistaPrevia(nombreArchivo) {
@@ -71,7 +77,7 @@ export function crearVistaDatos(contenedor) {
     const archivo = input.files[0];
     input.value = '';
     if (!archivo) return;
-    analisis = analizarImportacion(await archivo.text(), store.obtenerDatos(), hoyISO());
+    analisis = analizarImportacion(decodificarCSV(await archivo.arrayBuffer()), store.obtenerDatos(), hoyISO());
     renderVistaPrevia(archivo.name);
   }
 

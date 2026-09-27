@@ -31,6 +31,11 @@ export function cargar() {
   }
 }
 
+// true si lo guardado está dañado y aún no se restaura un respaldo.
+export function estaBloqueado() {
+  return bloqueado;
+}
+
 export function obtenerDatos() {
   return datos;
 }

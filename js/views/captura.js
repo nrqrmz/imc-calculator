@@ -184,6 +184,7 @@ export function crearVistaCaptura(contenedor) {
 
   function salirDeEdicion() {
     medicionEditada = null;
+    campos.nombre.readOnly = false;
     form.querySelector('[type="submit"]').textContent = 'Guardar medición';
     $('.cancelar-edicion').hidden = true;
     limpiarParaSiguiente();
@@ -198,7 +199,15 @@ export function crearVistaCaptura(contenedor) {
     if (!v.valido) return;
 
     const datos = store.obtenerDatos();
-    const nino = ninoSeleccionado ?? buscarNinoPorClave(datos, registro.nombre, registro.fechaNacimiento);
+    // El niño elegido pudo borrarse o editarse en la pestaña Niños: se vuelve a buscar.
+    const nino = ninoSeleccionado
+      ? obtenerNino(datos, ninoSeleccionado.id)
+      : buscarNinoPorClave(datos, registro.nombre, registro.fechaNacimiento);
+    if (ninoSeleccionado && !nino) {
+      limpiarParaSiguiente();
+      $('.error-general').textContent = 'El niño elegido ya no existe; búscalo o captúralo de nuevo.';
+      return;
+    }
     if (nino && nino.sexo !== registro.sexo) {
       mostrarErrores({ sexo: `${nino.nombre} ya está registrado como ${nino.sexo === 'F' ? 'niña' : 'niño'}` });
       return;
@@ -208,9 +217,10 @@ export function crearVistaCaptura(contenedor) {
 
     try {
       if (medicionEditada) {
+        const { ninoId } = datos.mediciones.find((m) => m.id === medicionEditada);
         store.modificar((d) => actualizarMedicion(d, medicionEditada, medicion));
         salirDeEdicion();
-        location.hash = `#ninos?nino=${nino.id}`;
+        location.hash = `#ninos?nino=${ninoId}`;
         return;
       }
       if (nino && buscarMedicion(datos, nino.id, fecha)
@@ -280,6 +290,7 @@ export function crearVistaCaptura(contenedor) {
         limpiarParaSiguiente();
         medicionEditada = medicion.id;
         seleccionarNino(ninoDeMedicion);
+        campos.nombre.readOnly = true; // en edición no se cambia de niño
         campos.fecha.value = medicion.fecha;
         campos.alturaCm.value = medicion.alturaCm;
         campos.pesoKg.value = medicion.pesoKg;
@@ -297,6 +308,12 @@ export function crearVistaCaptura(contenedor) {
         seleccionarNino(nino);
         renderResultado();
         campos.alturaCm.focus();
+      } else if (ninoSeleccionado) {
+        // Refleja cambios hechos en la pestaña Niños al niño que estaba elegido.
+        const actual = obtenerNino(datos, ninoSeleccionado.id);
+        if (actual) seleccionarNino(actual);
+        else limpiarParaSiguiente();
+        renderResultado();
       }
     },
   };

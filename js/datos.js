@@ -73,6 +73,9 @@ export function eliminarNino(datos, id) {
 // medicion: { ninoId, fecha, pesoKg, alturaCm, taller, grado }.
 // Si el niño ya tiene una medición en esa fecha, la reemplaza.
 export function guardarMedicion(datos, medicion, generarId = nuevoId) {
+  if (!obtenerNino(datos, medicion.ninoId)) {
+    throw new Error('El niño ya no existe; elígelo o captúralo de nuevo');
+  }
   const existente = buscarMedicion(datos, medicion.ninoId, medicion.fecha);
   if (existente) {
     Object.assign(existente, medicion, { id: existente.id });

@@ -14,6 +14,16 @@ const BOM = '﻿';
 
 export const PLANTILLA_CSV = `${BOM}${COLUMNAS.join(',')}\r\nSofía López García,12/05/2019,F,15/09/2026,T2,5,125,29.0\r\n`;
 
+// Excel guarda "CSV UTF-8" o, por defecto, "CSV" en ANSI (Windows-1252). Se intenta UTF-8
+// y, si los bytes no son UTF-8 válido, se lee como Windows-1252. Devuelve el texto sin BOM.
+export function decodificarCSV(buffer) {
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(buffer);
+  } catch {
+    return new TextDecoder('windows-1252').decode(buffer);
+  }
+}
+
 // Separador: el que más aparece en la primera línea (coma o punto y coma).
 function detectarSeparador(primeraLinea) {
   const cuenta = (c) => primeraLinea.split(c).length - 1;
@@ -75,18 +85,20 @@ export function analizarImportacion(texto, datos, hoy) {
     if (filaVacia(registro)) return;
     const celda = (col) => (registro[indice[col]] ?? '').trim();
 
-    const textoGrado = celda('grado').replace('°', '');
+    // "5", "5°", "5º" (ordinal) o "5o".
+    const lecturaGrado = /^(\d+)\s*[°ºo]?$/i.exec(celda('grado'));
     const registroCaptura = {
       nombre: limpiarNombre(celda('nombre')),
       fechaNacimiento: parsearFecha(celda('fecha_nacimiento')),
       sexo: parsearSexo(celda('sexo')),
       fecha: parsearFecha(celda('fecha_medicion')),
       taller: parsearTaller(celda('taller')),
-      grado: /^\d+$/.test(textoGrado) ? Number(textoGrado) : null,
+      grado: lecturaGrado ? Number(lecturaGrado[1]) : null,
       alturaCm: parsearDecimal(celda('altura_cm')),
       pesoKg: parsearDecimal(celda('peso_kg')),
     };
     const v = validarRegistro(registroCaptura, hoy);
+    if (!lecturaGrado && celda('grado') !== '') v.errores.grado = `Grado no reconocido: "${celda('grado')}"`;
     if (!v.valido) {
       errores.push({ fila, mensaje: Object.values(v.errores).join('; ') });
       return;

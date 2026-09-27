@@ -1,7 +1,7 @@
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { validarRespaldo, generarRespaldo, leerRespaldo } from '../js/respaldo.js';
-import { CLAVE, cargar, obtenerDatos, modificar, reemplazarTodo } from '../js/store.js';
+import { CLAVE, cargar, obtenerDatos, modificar, reemplazarTodo, estaBloqueado } from '../js/store.js';
 import { crearDatosVacios, agregarNino } from '../js/datos.js';
 
 const valido = () => ({
@@ -92,4 +92,13 @@ test('datos dañados bloquean la escritura hasta restaurar', () => {
   assert.equal(obtenerDatos().ninos.length, 1);
   modificar((d) => agregarNino(d, { nombre: 'Ana', fechaNacimiento: '2018-01-01', sexo: 'F' }));
   assert.equal(JSON.parse(mapa.get(CLAVE)).ninos.length, 2);
+});
+
+test('estaBloqueado indica datos dañados hasta restaurar', () => {
+  const mapa = simularLocalStorage();
+  mapa.set(CLAVE, '{dañado');
+  cargar();
+  assert.equal(estaBloqueado(), true);
+  reemplazarTodo(valido());
+  assert.equal(estaBloqueado(), false);
 });

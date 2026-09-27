@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  COLUMNAS, PLANTILLA_CSV, parsearCSV, analizarImportacion, aplicarImportacion, generarCSVExportacion,
+  COLUMNAS, PLANTILLA_CSV, parsearCSV, analizarImportacion, aplicarImportacion, generarCSVExportacion, decodificarCSV,
 } from '../js/csv.js';
 import { crearDatosVacios, agregarNino, guardarMedicion, medicionesDe } from '../js/datos.js';
 
@@ -125,4 +125,25 @@ test('exportar incluye calculados, escapa comas y se puede reimportar', () => {
   const r = analizarImportacion(csv, crearDatosVacios(), HOY);
   assert.deepEqual(r.errores, []);
   assert.deepEqual(r.validas[0].medicion, { fecha: '2026-09-15', pesoKg: 29, alturaCm: 125, taller: 'T2', grado: 5 });
+});
+
+test('el grado acepta 5°, 5º y 5o; un grado ilegible da un mensaje claro', () => {
+  const csv = [
+    ENCABEZADO,
+    'Ana Ruiz,01/02/2018,F,15/09/2026,T2,5º,120,22',
+    'Beto Paz,01/02/2018,M,15/09/2026,T2,5o,120,22',
+    'Caro Luz,01/02/2018,F,15/09/2026,T2,quinto,120,22',
+  ].join('\n');
+  const r = analizarImportacion(csv, crearDatosVacios(), HOY);
+  assert.equal(r.validas.length, 2);
+  assert.deepEqual(r.validas.map((v) => v.medicion.grado), [5, 5]);
+  assert.equal(r.errores[0].fila, 4);
+  assert.match(r.errores[0].mensaje, /Grado no reconocido: "quinto"/);
+});
+
+test('decodificarCSV lee UTF-8 y también ANSI (Windows-1252) de Excel', () => {
+  const utf8 = new TextEncoder().encode('﻿nombre\nMaría Peña\n');
+  assert.equal(decodificarCSV(utf8.buffer), 'nombre\nMaría Peña\n');
+  const ansi = Uint8Array.from([0x4d, 0x61, 0x72, 0xed, 0x61, 0x20, 0x50, 0x65, 0xf1, 0x61]); // "María Peña" en Windows-1252
+  assert.equal(decodificarCSV(ansi.buffer), 'María Peña');
 });
