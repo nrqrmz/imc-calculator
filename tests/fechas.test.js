@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  esFechaValida, parsearFecha, formatearFecha, hoyISO, diasEntre,
+  esFechaValida, parsearFecha, formatearFecha, hoyISO, diasEntre, mascaraFecha,
   edadCalendario, formatearEdad, formatearEdadCorta,
 } from '../js/fechas.js';
 import { cicloEscolar } from '../js/ciclo.js';
@@ -63,4 +63,24 @@ test('cicloEscolar va de agosto a julio', () => {
   assert.equal(cicloEscolar('2027-01-01'), '2026–2027');
   assert.equal(cicloEscolar('2026-07-31'), '2025–2026');
   assert.equal(cicloEscolar('2026-08-01'), '2026–2027');
+});
+
+test('mascaraFecha pone las diagonales mientras se teclea', () => {
+  assert.equal(mascaraFecha(''), '');
+  assert.equal(mascaraFecha('1'), '1');
+  assert.equal(mascaraFecha('12'), '12');
+  assert.equal(mascaraFecha('120'), '12/0');
+  assert.equal(mascaraFecha('1205'), '12/05');
+  assert.equal(mascaraFecha('12052019'), '12/05/2019');
+  assert.equal(mascaraFecha('120520191'), '12/05/2019');
+});
+
+test('mascaraFecha respeta diagonales escritas y descarta otros caracteres', () => {
+  assert.equal(mascaraFecha('12/05/2019'), '12/05/2019');
+  assert.equal(mascaraFecha('3/7/2020'), '3/7/2020');
+  assert.equal(mascaraFecha('12/'), '12/');
+  assert.equal(mascaraFecha('//12//05'), '12/05');
+  assert.equal(mascaraFecha('12-05-2019'), '12/05/2019');
+  assert.equal(mascaraFecha('ab12c'), '12');
+  assert.equal(mascaraFecha(undefined), '');
 });

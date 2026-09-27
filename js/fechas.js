@@ -35,6 +35,22 @@ export function parsearFecha(texto) {
   return iso && esFechaValida(iso) ? iso : null;
 }
 
+// Formato DD/MM/AAAA mientras se teclea: pone '/' tras 2 dígitos de día o mes
+// ('12052019' → '12/05/2019') y respeta las diagonales escritas ('3/7/2020').
+export function mascaraFecha(texto) {
+  const partes = [''];
+  for (const c of String(texto ?? '')) {
+    const i = partes.length - 1;
+    if (/\d/.test(c)) {
+      if (i < 2 && partes[i].length === 2) partes.push(c);
+      else if (partes[i].length < (i < 2 ? 2 : 4)) partes[i] += c;
+    } else if (c === '/' && i < 2 && partes[i]) {
+      partes.push('');
+    }
+  }
+  return partes.join('/');
+}
+
 export function formatearFecha(iso) {
   const p = partes(iso);
   return `${String(p.d).padStart(2, '0')}/${String(p.m).padStart(2, '0')}/${p.a}`;
