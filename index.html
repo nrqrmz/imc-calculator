@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IMC Escolar</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js" defer></script>
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <header class="encabezado">
+    <h1>IMC Escolar</h1>
+    <nav class="pestanas">
+      <a href="#captura" data-vista="captura">Captura</a>
+      <a href="#ninos" data-vista="ninos">Niños</a>
+      <a href="#estadisticas" data-vista="estadisticas">Estadísticas</a>
+      <a href="#datos" data-vista="datos">Datos</a>
+    </nav>
+  </header>
+  <div id="aviso-global" class="aviso" role="alert" hidden></div>
+  <main>
+    <section id="vista-captura" hidden></section>
+    <section id="vista-ninos" hidden></section>
+    <section id="vista-estadisticas" hidden></section>
+    <section id="vista-datos" hidden></section>
+  </main>
+</body>
+</html>

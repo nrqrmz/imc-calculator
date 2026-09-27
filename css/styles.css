@@ -1,0 +1,146 @@
+:root {
+  --fondo: #f6f5f1;
+  --tarjeta: #ffffff;
+  --texto: #1f2933;
+  --suave: #6b7280;
+  --borde: #e3e1da;
+  --acento: #4f46e5;
+  --acento-suave: #eef2ff;
+  --error: #b91c1c;
+  --ok: #15803d;
+  --radio: 10px;
+  color-scheme: light;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--fondo); color: var(--texto); font-size: 15px; line-height: 1.45; }
+[hidden] { display: none !important; }
+
+/* Encabezado y pestañas */
+.encabezado {
+  display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+  padding: 12px 24px; background: var(--tarjeta); border-bottom: 1px solid var(--borde);
+}
+.encabezado h1 { font-size: 1.15rem; margin: 0; }
+.pestanas { display: flex; gap: 4px; flex-wrap: wrap; }
+.pestanas a { padding: 8px 14px; border-radius: 8px; color: var(--suave); text-decoration: none; font-weight: 500; }
+.pestanas a:hover { background: var(--fondo); color: var(--texto); }
+.pestanas a.activa { background: var(--acento); color: #fff; }
+
+main { max-width: 1200px; margin: 0 auto; padding: 20px 16px 48px; }
+.aviso { background: #fef3c7; border: 1px solid #f59e0b; border-radius: var(--radio); padding: 10px 14px; margin: 12px auto; max-width: 1168px; }
+
+/* Bloques comunes */
+.tarjeta { background: var(--tarjeta); border: 1px solid var(--borde); border-radius: var(--radio); padding: 18px 20px; }
+h2 { font-size: 1.05rem; margin: 0 0 12px; }
+h3 { font-size: 0.95rem; margin: 16px 0 8px; }
+.nota { color: var(--suave); font-size: 0.9rem; margin: 4px 0 10px; }
+.fila { display: flex; gap: 16px; flex-wrap: wrap; }
+.fila > * { flex: 1 1 220px; }
+.campo { margin: 0 0 12px; border: 0; padding: 0; min-width: 0; }
+.campo > label, .campo > legend { display: block; font-weight: 500; font-size: 0.9rem; margin-bottom: 4px; padding: 0; }
+
+input:not([type="radio"]):not([type="checkbox"]), select {
+  width: 100%; padding: 8px 10px; border: 1px solid var(--borde); border-radius: 8px; font: inherit; background: #fff;
+}
+input:focus, select:focus, button:focus-visible, .boton:focus-within { outline: 2px solid var(--acento); outline-offset: 1px; }
+input[readonly] { background: var(--fondo); color: var(--suave); }
+
+.opciones { display: flex; flex-wrap: wrap; gap: 6px; }
+.opciones label {
+  display: inline-flex; align-items: center; gap: 6px; margin: 0;
+  padding: 6px 12px; border: 1px solid var(--borde); border-radius: 999px; cursor: pointer;
+}
+.opciones label:has(input:checked) { border-color: var(--acento); background: var(--acento-suave); }
+.opciones label:has(input:disabled) { cursor: default; opacity: 0.8; }
+.opciones input { margin: 0; }
+
+.error { display: block; color: var(--error); font-size: 0.85rem; }
+.error-general { color: var(--error); margin: 8px 0; }
+.error-general:empty, .error:empty { display: none; }
+.confirmacion { color: var(--ok); font-weight: 500; }
+
+button, .boton {
+  display: inline-flex; align-items: center; gap: 6px;
+  font: inherit; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--borde); background: #fff; color: var(--texto); cursor: pointer;
+}
+button:hover, .boton:hover { background: var(--fondo); }
+button.primario { background: var(--acento); color: #fff; border-color: var(--acento); }
+button.primario:hover { background: var(--acento); filter: brightness(1.1); }
+button.peligro { color: var(--error); border-color: #fecaca; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+.acciones { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 8px 0; }
+
+/* Captura */
+.captura { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 20px; align-items: start; }
+.campo-nombre { position: relative; }
+.sugerencias {
+  position: absolute; z-index: 10; left: 0; right: 0; top: 100%;
+  margin: 2px 0 0; padding: 4px; list-style: none;
+  background: #fff; border: 1px solid var(--borde); border-radius: 8px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+.sugerencias button { width: 100%; justify-content: space-between; border: 0; }
+.sugerencias small { color: var(--suave); }
+.nino-registrado { font-size: 0.85rem; color: var(--suave); margin: -6px 0 10px; }
+.resultado { position: sticky; top: 16px; }
+.resultado .edad { color: var(--suave); margin: 0 0 12px; }
+.metricas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.metricas div { background: var(--fondo); border-radius: 8px; padding: 10px; text-align: center; }
+.metricas span { display: block; font-size: 0.8rem; color: var(--suave); }
+.metricas strong { font-size: 1.4rem; }
+.clasificacion {
+  margin: 16px 0 12px; padding: 10px 14px; border-radius: 8px; font-weight: 600; font-size: 1.15rem;
+  border-left: 6px solid var(--color); background: color-mix(in srgb, var(--color) 14%, white);
+}
+.escala { position: relative; display: flex; height: 14px; }
+.escala span:first-child { border-radius: 7px 0 0 7px; }
+.escala span:last-of-type { border-radius: 0 7px 7px 0; }
+.marcador { position: absolute; top: -5px; width: 4px; height: 24px; margin-left: -2px; background: var(--texto); border-radius: 2px; }
+.escala-numeros { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--suave); margin-top: 4px; }
+.advertencia { background: #fef3c7; padding: 8px 10px; border-radius: 8px; font-size: 0.9rem; }
+
+/* Tablas */
+.tabla { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.tabla th { text-align: left; font-weight: 600; color: var(--suave); font-size: 0.8rem; border-bottom: 1px solid var(--borde); padding: 6px 8px; }
+.tabla td { border-bottom: 1px solid var(--borde); padding: 6px 8px; }
+.tabla-scroll { overflow-x: auto; }
+.tabla td:has(.punto) { white-space: nowrap; }
+.punto { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--color); margin-right: 6px; }
+.acciones-fila { white-space: nowrap; }
+.acciones-fila button { padding: 4px 8px; }
+
+/* Niños */
+.ninos { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); gap: 20px; align-items: start; }
+.filtros { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; margin: 10px 0; }
+.filtros label { font-size: 0.85rem; font-weight: 500; }
+.filtros select { width: auto; min-width: 140px; display: block; }
+.lista tbody tr { cursor: pointer; }
+.lista tbody tr:hover { background: var(--fondo); }
+.lista tbody tr.seleccionada { background: var(--acento-suave); }
+.ficha-encabezado { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.ficha-encabezado h2 { margin: 0; }
+.ficha-encabezado p { margin: 2px 0 0; color: var(--suave); }
+.editar-nino label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 0.9rem; }
+.editar-nino fieldset { border: 0; padding: 0; margin: 0 0 8px; }
+.ficha .tabla td, .ficha .tabla th { white-space: nowrap; padding: 6px; }
+.grafica { position: relative; height: 220px; margin-bottom: 12px; }
+
+/* Estadísticas */
+.estadisticas, .contenido, .datos { display: grid; gap: 20px; }
+.estadisticas .filtros { margin: 0; }
+.estadisticas fieldset { border: 0; padding: 0; margin: 0; }
+.estadisticas legend { font-size: 0.85rem; font-weight: 500; padding: 0; margin-bottom: 4px; }
+.evolucion + .evolucion { border-top: 1px solid var(--borde); margin-top: 12px; }
+.evolucion-cuerpo { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 16px; align-items: center; }
+
+/* Datos */
+.caja { padding: 10px 14px; border-radius: 8px; margin: 8px 0; }
+.caja.ok { background: #dcfce7; }
+.caja.error { background: #fee2e2; }
+.caja ul { margin: 6px 0 0; padding-left: 20px; }
+
+@media (max-width: 800px) {
+  .captura, .ninos, .evolucion-cuerpo { grid-template-columns: 1fr; }
+  .resultado { position: static; }
+}
