@@ -2,10 +2,12 @@
 import { cargar } from './store.js';
 import { crearVistaCaptura } from './views/captura.js';
 import { crearVistaNinos } from './views/ninos.js';
+import { crearVistaEstadisticas } from './views/estadisticas.js';
 
 const CREADORES = {
   captura: crearVistaCaptura,
   ninos: crearVistaNinos,
+  estadisticas: crearVistaEstadisticas,
 };
 const vistas = {};
 
