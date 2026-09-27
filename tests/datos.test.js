@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   VERSION, crearDatosVacios, obtenerNino, buscarNinoPorClave, buscarNinosPorNombre,
   medicionesDe, buscarMedicion, agregarNino, actualizarNino, eliminarNino,
-  guardarMedicion, actualizarMedicion, eliminarMedicion,
+  guardarMedicion, actualizarMedicion, eliminarMedicion, detalleNino,
 } from '../js/datos.js';
 
 function ids() {
@@ -100,4 +100,10 @@ test('guardarMedicion rechaza un niño que no existe', () => {
     /El niño ya no existe/,
   );
   assert.equal(datos.mediciones.filter((m) => m.ninoId === 'borrado').length, 0);
+});
+
+test('detalleNino muestra nacimiento y el taller · grado de la última medición', () => {
+  const { datos, sofia, diego } = datosDePrueba();
+  assert.equal(detalleNino(datos, sofia), '12/05/2019 · T-II · 5°');
+  assert.equal(detalleNino(datos, diego), '03/12/2021');
 });
