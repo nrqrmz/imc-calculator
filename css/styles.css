@@ -109,9 +109,9 @@ button.primario:disabled:hover { background: var(--azul); border-color: var(--az
 .captura > form { background: none; border: 0; padding: 0; }
 .captura > form h2:not(:first-child) { margin-top: 12px; padding-top: 24px; border-top: 1px solid var(--cuadricula); }
 .captura > form .acciones { margin-top: 20px; }
-.campo-nombre { position: relative; }
 .sugerencias {
-  position: absolute; z-index: 10; left: 0; right: 0; top: 100%;
+  /* En el flujo, no flotando: si tapara la fecha de nacimiento, un clic
+     en ella elegiría a otro niño con el mismo nombre. */
   margin: 4px 0 0; padding: 4px; list-style: none;
   background: var(--hoja); border: 1px solid var(--linea); border-radius: var(--radio);
   box-shadow: 0 8px 24px rgba(35, 65, 58, 0.12);
@@ -120,6 +120,7 @@ button.primario:disabled:hover { background: var(--azul); border-color: var(--az
 .sugerencias button:hover, .sugerencias button:focus-visible { background: var(--azul-tenue); }
 .sugerencias small { color: var(--pizarra-suave); font-variant-numeric: tabular-nums; }
 .nino-registrado { font-size: 0.875rem; color: var(--pizarra-suave); margin: -8px 0 12px; }
+.nino-registrado .es-otro { margin-left: 8px; padding: 4px 10px; font-size: 0.8125rem; }
 
 .resultado {
   position: sticky; top: 24px; padding: 24px 28px 32px;

@@ -1,7 +1,7 @@
 // Vista Captura: formulario de niño + medición con resultado en vivo.
 import * as store from '../store.js';
 import {
-  buscarNinosPorNombre, buscarNinoPorClave, obtenerNino, agregarNino,
+  buscarNinosPorNombre, buscarNinoPorClave, obtenerNino, agregarNino, detalleNino,
   guardarMedicion, buscarMedicion, actualizarMedicion,
 } from '../datos.js';
 import { validarRegistro } from '../validacion.js';
@@ -22,7 +22,10 @@ const HTML = `
       <ul class="sugerencias" hidden></ul>
       <small class="error" data-error="nombre"></small>
     </div>
-    <p class="nino-registrado" hidden>Niño registrado: sus datos se editan en la pestaña Niños.</p>
+    <p class="nino-registrado" hidden>
+      Niño registrado: sus datos se editan en la pestaña Niños.
+      <button type="button" class="es-otro">Es otro niño</button>
+    </p>
     <div class="fila">
       <div class="campo">
         <label for="cap-nacimiento">Fecha de nacimiento</label>
@@ -171,9 +174,10 @@ export function crearVistaCaptura(contenedor) {
   }
 
   function renderSugerencias() {
-    const lista = ninoSeleccionado ? [] : buscarNinosPorNombre(store.obtenerDatos(), campos.nombre.value).slice(0, 8);
+    const datos = store.obtenerDatos();
+    const lista = ninoSeleccionado ? [] : buscarNinosPorNombre(datos, campos.nombre.value).slice(0, 8);
     sugerencias.innerHTML = lista
-      .map((n) => `<li><button type="button" data-id="${n.id}">${escaparHTML(n.nombre)} <small>${formatearFecha(n.fechaNacimiento)}</small></button></li>`)
+      .map((n) => `<li><button type="button" data-id="${n.id}">${escaparHTML(n.nombre)} <small>${detalleNino(datos, n)}</small></button></li>`)
       .join('');
     sugerencias.hidden = lista.length === 0;
   }
@@ -188,6 +192,7 @@ export function crearVistaCaptura(contenedor) {
       r.disabled = true;
     });
     $('.nino-registrado').hidden = false;
+    $('.es-otro').hidden = campos.nombre.readOnly;
     sugerencias.hidden = true;
   }
 
@@ -285,8 +290,18 @@ export function crearVistaCaptura(contenedor) {
     renderResultado();
     campos.alturaCm.focus();
   });
-  document.addEventListener('click', (ev) => {
-    if (!ev.target.closest('.campo-nombre')) sugerencias.hidden = true;
+  // La lista se cierra en cuanto el foco sale del nombre.
+  sugerencias.addEventListener('mousedown', (ev) => ev.preventDefault()); // el nombre conserva el foco
+  $('.campo-nombre').addEventListener('focusout', (ev) => {
+    if (!ev.currentTarget.contains(ev.relatedTarget)) sugerencias.hidden = true;
+  });
+  // Se eligió de la lista a un niño con el mismo nombre pero es otro: se captura como nuevo.
+  $('.es-otro').addEventListener('click', () => {
+    soltarNino();
+    campos.fechaNacimiento.value = '';
+    form.querySelectorAll('[name="sexo"]').forEach((r) => { r.checked = false; });
+    renderResultado();
+    campos.fechaNacimiento.focus();
   });
   form.addEventListener('change', (ev) => {
     if (ev.target.name === 'taller') renderGrados();
@@ -320,6 +335,7 @@ export function crearVistaCaptura(contenedor) {
         medicionEditada = medicion.id;
         seleccionarNino(ninoDeMedicion);
         campos.nombre.readOnly = true; // en edición no se cambia de niño
+        $('.es-otro').hidden = true;
         campos.fecha.value = formatearFecha(medicion.fecha);
         campos.alturaCm.value = medicion.alturaCm;
         campos.pesoKg.value = medicion.pesoKg;

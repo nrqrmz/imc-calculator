@@ -1,7 +1,8 @@
 // Operaciones sobre el objeto de datos { version, ninos, mediciones }.
 // Las funciones que modifican cambian el objeto recibido; store.js les pasa una copia.
 import { claveNino, limpiarNombre, normalizarTexto } from './normalizar.js';
-import { edadCalendario } from './fechas.js';
+import { edadCalendario, formatearFecha } from './fechas.js';
+import { etiquetaTallerGrado } from './talleres.js';
 import { RANGOS } from './validacion.js';
 
 export const VERSION = 1;
@@ -34,6 +35,13 @@ export function medicionesDe(datos, ninoId) {
   return datos.mediciones
     .filter((m) => m.ninoId === ninoId)
     .sort((a, b) => b.fecha.localeCompare(a.fecha));
+}
+
+// Para distinguir niños con el mismo nombre: "12/05/2019 · T-II · 5°".
+export function detalleNino(datos, nino) {
+  const ultima = medicionesDe(datos, nino.id)[0];
+  const nacimiento = formatearFecha(nino.fechaNacimiento);
+  return ultima ? `${nacimiento} · ${etiquetaTallerGrado(ultima.taller, ultima.grado)}` : nacimiento;
 }
 
 export function buscarMedicion(datos, ninoId, fecha) {
