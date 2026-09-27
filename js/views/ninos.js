@@ -3,9 +3,9 @@ import * as store from '../store.js';
 import { medicionesDe, obtenerNino, actualizarNino, eliminarNino, eliminarMedicion } from '../datos.js';
 import { evaluarSeguro, ETIQUETAS, tramosEscala } from '../imc.js';
 import { TALLERES, obtenerTaller, etiquetaTallerGrado } from '../talleres.js';
-import { hoyISO, formatearFecha, formatearEdadCorta, edadCalendario, esFechaValida } from '../fechas.js';
+import { hoyISO, formatearFecha, formatearEdadCorta, edadCalendario, esFechaValida, parsearFecha } from '../fechas.js';
 import { normalizarTexto, limpiarNombre } from '../normalizar.js';
-import { escaparHTML } from './dom.js';
+import { escaparHTML, activarCampoFecha } from './dom.js';
 import { COLORES, AVISO_SIN_GRAFICAS, chartDisponible, lineaZ } from './graficas.js';
 
 const HTML = `
@@ -50,7 +50,7 @@ const encabezadoHTML = (n) => `
 const edicionHTML = (n) => `
   <form class="editar-nino">
     <label>Nombre completo <input name="nombre" value="${escaparHTML(n.nombre)}"></label>
-    <label>Fecha de nacimiento <input name="fechaNacimiento" type="date" value="${n.fechaNacimiento}"></label>
+    <label>Fecha de nacimiento <input name="fechaNacimiento" inputmode="numeric" placeholder="dd/mm/aaaa" maxlength="10" autocomplete="off" value="${formatearFecha(n.fechaNacimiento)}"></label>
     <fieldset>
       <legend>Sexo</legend>
       <div class="opciones">
@@ -143,6 +143,7 @@ export function crearVistaNinos(contenedor) {
         </table>
       </div>
       <div class="acciones"><button type="button" class="primario" data-nueva-medicion>+ Nueva medición</button></div>`;
+    if (editando) activarCampoFecha(ficha.querySelector('.editar-nino [name="fechaNacimiento"]'));
     if (!conResultado.length) return;
     if (!chartDisponible()) {
       ficha.querySelector('.grafica').innerHTML = AVISO_SIN_GRAFICAS;
@@ -217,7 +218,7 @@ export function crearVistaNinos(contenedor) {
     ev.preventDefault();
     const f = ev.target;
     const nombre = limpiarNombre(f.elements.nombre.value);
-    const fechaNacimiento = f.elements.fechaNacimiento.value;
+    const fechaNacimiento = parsearFecha(f.elements.fechaNacimiento.value);
     const sexo = f.querySelector('[name="sexo"]:checked')?.value;
     if (!nombre || !esFechaValida(fechaNacimiento) || !sexo) {
       ficha.querySelector('.error-general').textContent = 'Completa nombre, fecha de nacimiento y sexo.';

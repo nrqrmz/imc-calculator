@@ -6,10 +6,10 @@ import {
 } from '../datos.js';
 import { validarRegistro } from '../validacion.js';
 import { TALLERES, obtenerTaller } from '../talleres.js';
-import { hoyISO, formatearFecha, formatearEdad } from '../fechas.js';
+import { hoyISO, formatearFecha, formatearEdad, parsearFecha } from '../fechas.js';
 import { ETIQUETAS, tramosEscala } from '../imc.js';
 import { parsearDecimal, limpiarNombre } from '../normalizar.js';
-import { escaparHTML } from './dom.js';
+import { escaparHTML, activarCampoFecha } from './dom.js';
 import { COLORES } from './graficas.js';
 
 const HTML = `
@@ -26,7 +26,7 @@ const HTML = `
     <div class="fila">
       <div class="campo">
         <label for="cap-nacimiento">Fecha de nacimiento</label>
-        <input id="cap-nacimiento" name="fechaNacimiento" type="date">
+        <input id="cap-nacimiento" name="fechaNacimiento" inputmode="numeric" placeholder="dd/mm/aaaa" maxlength="10" autocomplete="off">
         <small class="error" data-error="fechaNacimiento"></small>
       </div>
       <fieldset class="campo">
@@ -42,7 +42,7 @@ const HTML = `
     <h2>Medición</h2>
     <div class="campo">
       <label for="cap-fecha">Fecha de medición</label>
-      <input id="cap-fecha" name="fecha" type="date">
+      <input id="cap-fecha" name="fecha" inputmode="numeric" placeholder="dd/mm/aaaa" maxlength="10" autocomplete="off">
       <small class="error" data-error="fecha"></small>
     </div>
     <fieldset class="campo">
@@ -130,9 +130,9 @@ export function crearVistaCaptura(contenedor) {
     const grado = marcado('grado');
     return {
       nombre: campos.nombre.value,
-      fechaNacimiento: campos.fechaNacimiento.value,
+      fechaNacimiento: parsearFecha(campos.fechaNacimiento.value),
       sexo: marcado('sexo'),
-      fecha: campos.fecha.value,
+      fecha: parsearFecha(campos.fecha.value),
       taller: marcado('taller'),
       grado: grado ? Number(grado) : null,
       alturaCm: parsearDecimal(campos.alturaCm.value),
@@ -181,7 +181,7 @@ export function crearVistaCaptura(contenedor) {
   function seleccionarNino(nino) {
     ninoSeleccionado = nino;
     campos.nombre.value = nino.nombre;
-    campos.fechaNacimiento.value = nino.fechaNacimiento;
+    campos.fechaNacimiento.value = formatearFecha(nino.fechaNacimiento);
     campos.fechaNacimiento.readOnly = true;
     form.querySelectorAll('[name="sexo"]').forEach((r) => {
       r.checked = r.value === nino.sexo;
@@ -303,7 +303,9 @@ export function crearVistaCaptura(contenedor) {
     location.hash = id ? `#ninos?nino=${id}` : '#ninos';
   });
 
-  campos.fecha.value = hoyISO();
+  activarCampoFecha(campos.fechaNacimiento);
+  activarCampoFecha(campos.fecha);
+  campos.fecha.value = formatearFecha(hoyISO());
   renderGrados();
   renderResultado();
 
@@ -318,7 +320,7 @@ export function crearVistaCaptura(contenedor) {
         medicionEditada = medicion.id;
         seleccionarNino(ninoDeMedicion);
         campos.nombre.readOnly = true; // en edición no se cambia de niño
-        campos.fecha.value = medicion.fecha;
+        campos.fecha.value = formatearFecha(medicion.fecha);
         campos.alturaCm.value = medicion.alturaCm;
         campos.pesoKg.value = medicion.pesoKg;
         form.querySelectorAll('[name="taller"]').forEach((r) => { r.checked = r.value === medicion.taller; });
